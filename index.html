@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Dreidel Table</title>
+		<style>
+			body {
+				margin: 0;
+				height: 100vh;
+				background-color: #f0f0f0;
+				overflow: hidden;
+				cursor: crosshair;
+			}
+			.player {
+				position: absolute;
+				width: 70px;
+				border: 5px solid blue;
+				border-radius: 50%;
+				pointer-events: none; /* Prevent clicking the new div */
+
+				text-align: center;
+				height: 70px;
+				line-height: 70px;
+
+				font-size: 2em;
+			}
+			.player.active {
+				border: 5px solid orangered;
+			}
+			#pot {
+				font-size: 50px;
+				position: absolute;
+				left: 40%;
+				top: 29%;
+
+				button {
+					font-size: 50px;
+				}
+			}
+			#controls {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 12px;
+				position: absolute;
+				left: 40%;
+				top: 40%;
+
+				button {
+					font-size: 50px;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<div id="pot">
+			<button id="start">Start</button>
+		</div>
+		<div id="controls">
+			<button id="shin">ש‎</button>
+			<button id="hei">ה‎</button>
+			<button id="gimel">ג‎</button>
+			<button id="nun">נ‎</button>
+		</div>
+		<script>
+			const flipTable = () => {
+				const activePlayer = document.querySelector('.active');
+				if (activePlayer.getBoundingClientRect().top < document.body.clientHeight / 2) {
+					pot.style.transform = `rotate(180deg)`;
+					controls.style.transform = `rotate(180deg)`;
+				} else {
+					pot.style.transform = `rotate(0deg)`;
+					controls.style.transform = `rotate(0deg)`;
+				}
+			};
+
+			const checkForDeletions = () => {
+				[...document.querySelectorAll('.player')].forEach((player) => {
+					if (player.textContent.trim() === '0') {
+						player.remove();
+					}
+				});
+			};
+
+			const pullOneFromAllPlayers = () => {
+				// pull one coin from each player
+				[...document.querySelectorAll('.player')].forEach((player) => {
+					player.textContent = parseInt(player.textContent.trim()) - 1;
+					pot.textContent = parseInt(pot.textContent.trim() || '0') + 1;
+				});
+			};
+
+			start.addEventListener('click', () => {
+				event.stopPropagation();
+				start.remove();
+				document.body.removeEventListener('click', createNewPlayer);
+
+				// set the start player
+				const firstPlayer = document.querySelector('.player');
+				firstPlayer.classList.add('active');
+
+				pullOneFromAllPlayers();
+				flipTable();
+			});
+
+			const moveToNextPlayer = (activePlayer) => {
+				activePlayer.classList.remove('active');
+				checkForDeletions();
+
+				if (activePlayer.nextSibling) {
+					activePlayer.nextSibling.classList.add('active');
+				} else {
+					const firstPlayer = document.querySelector('.player');
+					firstPlayer.classList.add('active');
+				}
+
+				flipTable();
+			};
+
+			shin.addEventListener('click', () => {
+				const activePlayer = document.querySelector('.active');
+				activePlayer.textContent = parseInt(activePlayer.textContent.trim()) - 1;
+				pot.textContent = parseInt(pot.textContent.trim()) + 1;
+
+				moveToNextPlayer(activePlayer);
+			});
+			hei.addEventListener('click', () => {
+				const activePlayer = document.querySelector('.active');
+				const potValue = parseInt(pot.textContent.trim());
+				const prize = Math.floor(potValue / 2);
+
+				pot.textContent = potValue - prize;
+				activePlayer.textContent = parseInt(activePlayer.textContent.trim()) + prize;
+
+				moveToNextPlayer(activePlayer);
+			});
+			gimel.addEventListener('click', () => {
+				const activePlayer = document.querySelector('.active');
+				const potValue = parseInt(pot.textContent.trim());
+				activePlayer.textContent = parseInt(activePlayer.textContent.trim()) + potValue;
+
+				pot.textContent = '0';
+				pullOneFromAllPlayers();
+
+				moveToNextPlayer(activePlayer);
+			});
+			nun.addEventListener('click', () => {
+				const activePlayer = document.querySelector('.active');
+				moveToNextPlayer(activePlayer);
+			});
+
+			const createNewPlayer = (event) => {
+				// Create a new div
+				const playerDiv = document.createElement('div');
+				playerDiv.classList.add('player');
+				playerDiv.textContent = 5;
+
+				// Position the new div at the click location
+				playerDiv.style.left = `${event.pageX - 25}px`;
+				playerDiv.style.top = `${event.pageY - 25}px`;
+
+				// Append the new div to the body
+				document.body.appendChild(playerDiv);
+
+				if (playerDiv.getBoundingClientRect().top < document.body.clientHeight / 2) {
+					playerDiv.style.transform = `rotate(180deg)`;
+				} else {
+					playerDiv.style.transform = `rotate(0deg)`;
+				}
+			};
+
+			document.body.addEventListener('click', createNewPlayer);
+		</script>
+	</body>
+</html>
